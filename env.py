@@ -1,7 +1,7 @@
 import gym
 from gym import spaces
 import numpy as np
-
+from render import GridRender
 class GridWorldEnv(gym.Env):
     def __init__(self, grid_size, start, end, obstacles):
         super(GridWorldEnv, self).__init__()
@@ -14,9 +14,12 @@ class GridWorldEnv(gym.Env):
         
         self.action_space = spaces.Discrete(4)  # 4 actions: up, down, left, right
         self.observation_space = spaces.Box(low=0, high=max(grid_size), shape=(2,), dtype=int)
+        
+        self.renderer = GridRender(grid_size, start, end, obstacles, self.state)
 
-    def reset(self):
+    def reset(self, episode):
         self.state = self.start
+        self.renderer.update_labels(episode)
         return np.array(self.state, dtype=int)
 
     def step(self, action):
@@ -54,10 +57,5 @@ class GridWorldEnv(gym.Env):
         return np.array(self.state, dtype=int), reward, done, {}
 
     def render(self):
-        grid = np.zeros(self.grid_size)
-        for obstacle in self.obstacles:
-            grid[obstacle] = -1
-        grid[self.start] = 1
-        grid[self.end] = 2
-        grid[self.state] = 3
-        print(grid)
+        self.renderer.state = self.state  # Update the current state in the renderer
+        self.renderer.render() 
